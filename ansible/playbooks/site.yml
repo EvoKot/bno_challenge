@@ -1,8 +1,7 @@
 ---
 # Provisions each VM as a GitHub Actions self-hosted runner
 - name: Configure self-hosted runner(s)
-  hosts: localhost
-  connection: local
+  hosts: all
   become: true
 
   vars:

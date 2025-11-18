@@ -50,7 +50,7 @@ Vagrant.configure("2") do |config|
           runner_extra_labels: "bno"
         }
 
-        ansible.limit = "all"
+        ansible.limit = srv[:hostname]
       end
     end
   end
