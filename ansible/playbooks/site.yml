@@ -1,0 +1,25 @@
+---
+# Provisions each VM as a GitHub Actions self-hosted runner
+- name: Configure self-hosted runner(s)
+  hosts: all
+  become: true
+
+  vars:
+    gh_owner: "{{ gh_owner | default('') }}"
+    gh_repo:  "{{ gh_repo  | default('') }}"
+    gh_pat:   "{{ gh_pat   | default('') }}"
+    runner_extra_labels: "{{ runner_extra_labels | default('bno') }}"
+
+  pre_tasks:
+    - name: Assert GitHub configuration is present
+      assert:
+        that:
+          - gh_owner | length > 0
+          - gh_repo  | length > 0
+          - gh_pat   | length > 0
+        fail_msg: >
+          Missing GitHub details. Ensure Vagrantfile receives GH_OWNER, GH_REPO and GH_PAT
+          from your environment before 'vagrant up'.
+
+  roles:
+    - github_runner
