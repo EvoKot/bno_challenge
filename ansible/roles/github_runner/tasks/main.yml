@@ -1,0 +1,103 @@
+---
+# Install packages we will need
+- name: Ensure required packages are present
+  apt:
+    name:
+      - curl
+      - tar
+      - jq
+      - ca-certificates
+    state: present
+    update_cache: true
+
+# Create a dedicated user
+- name: Ensure 'runner' user exists
+  user:
+    name: runner
+    shell: /bin/bash
+    create_home: true
+
+# Prepare installation directory
+- name: Ensure actions-runner directory exists
+  file:
+    path: /opt/actions-runner
+    state: directory
+    owner: runner
+    group: runner
+    mode: "0755"
+
+# Query the latest stable runner release from GitHub
+- name: Query latest runner release
+  uri:
+    url: https://api.github.com/repos/actions/runner/releases/latest
+    headers:
+      Accept: application/vnd.github+json
+    return_content: true
+  register: gh_runner_release
+  changed_when: false
+
+- name: Decide runner version
+  set_fact:
+    runner_version: "{{ (gh_runner_release.json.tag_name | regex_replace('^v','')) | default('2.317.0', true) }}"
+
+- name: Define runner URLs/paths
+  set_fact:
+    runner_tgz_url: "https://github.com/actions/runner/releases/download/v{{ runner_version }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+    runner_tgz_path: "/opt/actions-runner/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+
+# Download and expand the runner
+- name: Download actions runner archive
+  get_url:
+    url: "{{ runner_tgz_url }}"
+    dest: "{{ runner_tgz_path }}"
+    mode: "0644"
+  register: download_runner
+
+- name: Extract runner
+  unarchive:
+    src: "{{ runner_tgz_path }}"
+    dest: /opt/actions-runner
+    remote_src: true
+    creates: /opt/actions-runner/bin/Runner.Listener
+  notify: restart runner (if managed)
+
+# Get a registration token from GitHub for this repo (token expires quickly)
+- name: Get repository registration token
+  uri:
+    url: "https://api.github.com/repos/{{ gh_owner }}/{{ gh_repo }}/actions/runners/registration-token"
+    method: POST
+    headers:
+      Authorization: "token {{ gh_pat }}"
+      Accept: application/vnd.github+json
+    status_code: 201
+  register: gh_reg_token
+
+# Configure the runner under the 'runner' account (idempotent with creates guard)
+- name: Configure the runner
+  shell: |
+    ./config.sh --url https://github.com/{{ gh_owner }}/{{ gh_repo }} \
+                --token {{ gh_reg_token.json.token }} \
+                --name {{ inventory_hostname }} \
+                --labels {{ runner_extra_labels }},{{ inventory_hostname }} \
+                --unattended
+  args:
+    chdir: /opt/actions-runner
+    creates: /opt/actions-runner/.runner
+  become_user: runner
+
+# Install and start as a system service
+- name: Install runner service (if not already installed)
+  shell: ./svc.sh install
+  args:
+    chdir: /opt/actions-runner
+  register: svc_install
+  changed_when: "'Service installed' in svc_install.stdout or 'Created symlink' in svc_install.stdout"
+  failed_when: "svc_install.rc not in [0, 1]"
+
+- name: Ensure runner service is running
+  shell: ./svc.sh start
+  args:
+    chdir: /opt/actions-runner
+  register: svc_start
+  changed_when: "'Started' in svc_start.stdout"
+  failed_when: "svc_start.rc not in [0, 1]"

@@ -1,0 +1,5 @@
+---
+# Currently not used, but kept for extensibility
+- name: restart runner (if managed)
+  debug:
+    msg: "Runner would restart here if we templated a systemd unit."
