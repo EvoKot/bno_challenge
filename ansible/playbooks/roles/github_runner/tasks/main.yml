@@ -83,7 +83,7 @@
   args:
     chdir: /opt/actions-runner
     creates: /opt/actions-runner/.runner
-  become_user: runner
+ # become_user: runner
 
 # Install and start as a system service
 - name: Install runner service (if not already installed)
