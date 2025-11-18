@@ -75,15 +75,16 @@
 # Configure the runner under the 'runner' account (idempotent with creates guard)
 - name: Configure the runner
   shell: |
-    ./config.sh --url https://github.com/{{ gh_owner }}/{{ gh_repo }} \
-                --token {{ gh_reg_token.json.token }} \
-                --name {{ inventory_hostname }} \
-                --labels {{ runner_extra_labels }},{{ inventory_hostname }} \
-                --unattended
+   su - runner -c './config.sh --url https://github.com/{{ gh_owner }}/{{ gh_repo }} \
+                   --token {{ gh_reg_token.json.token }} \
+                   --name {{ inventory_hostname }} \
+                   --labels {{ runner_extra_labels }},{{ inventory_hostname }} \
+                   --unattended'
   args:
     chdir: /opt/actions-runner
     creates: /opt/actions-runner/.runner
- # become_user: runner
+# become_user: runner
+# run as root, but use su so config.sh runs as non-root 'runner' user
 
 # Install and start as a system service
 - name: Install runner service (if not already installed)
