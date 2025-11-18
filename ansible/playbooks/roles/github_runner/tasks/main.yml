@@ -75,7 +75,7 @@
 # Configure the runner under the 'runner' account (idempotent with creates guard)
 - name: Configure the runner
   shell: |
-   su - runner -c './config.sh --url https://github.com/{{ gh_owner }}/{{ gh_repo }} \
+   su - runner -c 'cd /opt/actions-runner && ./config.sh --url https://github.com/{{ gh_owner }}/{{ gh_repo }} \
                    --token {{ gh_reg_token.json.token }} \
                    --name {{ inventory_hostname }} \
                    --labels {{ runner_extra_labels }},{{ inventory_hostname }} \
