@@ -5,7 +5,7 @@ on:
 
 jobs:
   on-runner1:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, bno, runner1]
     steps:
       - name: Show context
         run: |
@@ -13,7 +13,7 @@ jobs:
           uname -a
 
   on-runner2:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, bno, runner2]
     steps:
       - name: Show context
         run: |
