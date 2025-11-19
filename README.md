@@ -59,11 +59,11 @@ vagrant up        # creates & provisions runner1 and runner2
     2. Two VMs are created: runner1, runner2.
     3. ansible_local runs inside each VM using ansible/playbooks/site.yml.
     4. The github_runner role:
-    5. Installs required packages (curl, git, jq, tar, ansible, …)
-    6. Creates user runner
-    7. Downloads the latest GitHub Actions runner
-    8. Registers it to GH_OWNER/GH_REPO with labels self-hosted, bno, runnerX
-    9. Ensures the runner service is installed and running
+      - Installs required packages (curl, git, jq, tar, ansible, …)
+      - Creates user runner
+      - Downloads the latest GitHub Actions runner
+      - Registers it to GH_OWNER/GH_REPO with labels self-hosted, bno, runnerX
+      - Ensures the runner service is installed and running
 4. Verify runners in GitHub
  - In the GitHub UI:
 Settings → Actions → Runners
